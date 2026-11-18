@@ -229,12 +229,10 @@
     const s = a.createBufferSource(), g = a.createGain(); s.buffer = b;
     g.gain.value = vol || .2; s.connect(g); g.connect(a.destination); s.start();
   }
-  const weeSnd = new Audio('assets/wee.wav'); weeSnd.preload = 'auto'; weeSnd.volume = .9;
   const sfx = {
     bounce: () => { tone(340, 190, .09, 'sine', .16); hap('light'); },
     spring: () => { tone(300, 950, .22, 'sine', .2); hap('medium'); },
-    sneaker: () => { tone(400, 800, .14, 'square', .08); setTimeout(() => tone(600, 1200, .16, 'square', .08), 70);
-      weeSnd.currentTime = 0; weeSnd.play().catch(() => {}); hap('medium'); },
+    sneaker: () => { tone(400, 800, .14, 'square', .08); setTimeout(() => tone(600, 1200, .16, 'square', .08), 70); hap('medium'); },
     bolt: () => { tone(880, 1400, .07, 'sine', .14); hap('light'); },
     zap: () => { noise(.14, .25); tone(180, 60, .2, 'sawtooth', .12); hap('heavy'); },
     mile: () => { tone(660, 660, .09, 'sine', .14); setTimeout(() => tone(990, 990, .12, 'sine', .14), 90); },
