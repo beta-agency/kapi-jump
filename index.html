@@ -142,7 +142,7 @@
     <div class="howto"><img src="assets/bolt.png" alt=""><span>молния — подброс вверх</span></div>
     <div class="howto"><img src="assets/cloud.png" alt=""><span>туча бьёт током — облетай</span></div>
     <button class="btn" id="bPlay">ИГРАТЬ</button>
-    <div class="note">← → или A/D — наклон. На телефоне держи левую или правую половину экрана.<span class="touch"> Или просто наклоняй телефон.</span></div>
+    <div class="note">← → или A/D — наклон. На телефоне держи левую или правую половину экрана.</div>
   </div>
 
   <!-- конец -->
@@ -309,7 +309,7 @@
     if ((e.code === 'Escape' || e.code === 'KeyP') && (mode === 'play' || mode === 'pause')) togglePause();
   });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
-  let touchDir = 0, tilt = 0, tiltOn = false;
+  let touchDir = 0;
   const wrap = document.getElementById('wrap');
   function ptrDir(e) {
     const r = wrap.getBoundingClientRect();
@@ -319,15 +319,11 @@
   wrap.addEventListener('touchstart', e => { if (mode === 'play') { touchDir = ptrDir(e); e.preventDefault(); } }, { passive: false });
   wrap.addEventListener('touchmove', e => { if (mode === 'play') { touchDir = ptrDir(e); e.preventDefault(); } }, { passive: false });
   wrap.addEventListener('touchend', e => { if (!e.touches.length) touchDir = 0; });
-  window.addEventListener('deviceorientation', e => {
-    if (typeof e.gamma === 'number') { tiltOn = true; tilt = Math.max(-1, Math.min(1, e.gamma / 22)); }
-  });
   function input() {
     let d = 0;
     if (keys.ArrowLeft || keys.KeyA) d -= 1;
     if (keys.ArrowRight || keys.KeyD) d += 1;
     if (touchDir) d = touchDir;
-    else if (tiltOn && Math.abs(tilt) > .12) d = tilt;
     return d;
   }
 
