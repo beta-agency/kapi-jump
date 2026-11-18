@@ -110,6 +110,7 @@
     .desk-note { font: 12px/17px Inter; color: var(--muted); }
     .note .touch { display: none; }
   }
+  body.tg .side { display: none !important; }
 </style>
 </head>
 <body>
@@ -184,6 +185,7 @@
   // Telegram Mini App: развернуть, отключить свайп-закрытие, фуллскрин если умеет
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) {
+    document.body.classList.add('tg');
     try {
       tg.ready(); tg.expand();
       if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
