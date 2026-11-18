@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>KAPI JUMP</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #b8e5fc;
+    --kapi: #01abeb;
+    --jacket: #129ae0;
+    --denim: #4280a6;
+    --lime: #91cc1d;
+    --lime2: #d4de29;
+    --grass: #317b1a;
+    --brand: #005eb8;
+    --ink: #0b2a4a;
+    --muted: rgba(11,42,74,.6);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--sky); color: var(--ink); }
+  body {
+    font-family: Inter, system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none;
+  }
+  #wrap { position: relative; width: min(100vw, calc(100dvh * 9 / 16));
+    height: min(100dvh, calc(min(100vw, calc(100dvh * 9 / 16)) * 20 / 9));
+    --u: calc(100cqw / 360); container-type: inline-size;
+    border-radius: calc(18 * var(--u)); overflow: hidden;
+    box-shadow: 0 8px 40px rgba(1,103,167,.25); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .bb { font-family: "Baloo 2", Inter, sans-serif; }
+  #hud { position: absolute; left: 0; right: 0; top: 0; height: calc(70 * var(--u)); pointer-events: none; transition: opacity .2s; }
+  #hud.dim { opacity: .35; }
+  #hScore { position: absolute; left: 0; right: 0; top: calc(10 * var(--u)); text-align: center;
+    font-family: "Baloo 2"; font-weight: 800; font-size: calc(34 * var(--u)); line-height: 1; color: #fff;
+    text-shadow: 0 2px 0 rgba(11,42,74,.25); font-variant-numeric: tabular-nums; }
+  #hBest { position: absolute; left: 0; right: 0; top: calc(46 * var(--u)); text-align: center;
+    font: 600 calc(11 * var(--u)) Inter; color: rgba(255,255,255,.85); text-shadow: 0 1px 0 rgba(11,42,74,.2); }
+  #bPause { position: absolute; right: calc(10 * var(--u)); top: calc(14 * var(--u)); height: calc(30 * var(--u));
+    border: 0; border-radius: calc(15 * var(--u)); padding: 0 calc(14 * var(--u)); display: none;
+    background: rgba(255,255,255,.9); color: var(--brand); font: 700 calc(13 * var(--u)) "Baloo 2"; cursor: pointer; pointer-events: auto; }
+  .screen {
+    position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3cqw; padding: 8cqw; text-align: center;
+    background: linear-gradient(to bottom, rgba(184,229,252,.55), rgba(18,154,224,.78));
+    backdrop-filter: blur(2px);
+  }
+  .screen.on { display: flex; }
+  .logo { font-family: "Baloo 2"; font-weight: 800; font-size: 16cqw; line-height: .9; color: #fff;
+    text-shadow: .8cqw .8cqw 0 var(--brand); letter-spacing: .01em; }
+  .logo small { display: block; font-size: 7cqw; color: var(--lime2); text-shadow: .5cqw .5cqw 0 var(--brand); }
+  .kapi-hero { width: 38cqw; height: auto; filter: drop-shadow(0 1.5cqw 0 rgba(11,42,74,.18)); }
+  .kapi-hero.small { width: 30cqw; }
+  .sub { font: 400 calc(15 * var(--u))/1.35 Inter; color: #fff; max-width: calc(250 * var(--u)); }
+  .tag { font: 700 3.4cqw "Baloo 2"; color: var(--lime2); text-transform: uppercase; letter-spacing: .08em; }
+  .btn {
+    font: 800 calc(20 * var(--u)) "Baloo 2"; color: var(--brand); background: #fff;
+    border: 0; border-radius: calc(22 * var(--u)); height: calc(48 * var(--u)); width: calc(240 * var(--u));
+    box-shadow: 0 calc(5 * var(--u)) 0 var(--brand); cursor: pointer;
+  }
+  .btn:active { transform: translateY(calc(4 * var(--u))); box-shadow: 0 calc(1 * var(--u)) 0 var(--brand); }
+  .btn.ghost { background: transparent; color: #fff; box-shadow: none;
+    border: calc(2 * var(--u)) solid rgba(255,255,255,.85); font-size: calc(15 * var(--u)); font-weight: 700; height: calc(40 * var(--u)); }
+  .note { font: 400 calc(12 * var(--u))/1.45 Inter; color: rgba(255,255,255,.9); max-width: calc(270 * var(--u)); }
+  .big { font-family: "Baloo 2"; font-weight: 800; font-size: 20cqw; color: #fff; line-height: 1;
+    text-shadow: .7cqw .7cqw 0 var(--brand); font-variant-numeric: tabular-nums; }
+  .rec { font: 700 calc(14 * var(--u)) "Baloo 2"; color: var(--lime2); }
+  .howto { display: flex; gap: calc(10 * var(--u)); align-items: center; font: 600 calc(11.5 * var(--u))/1.3 Inter;
+    color: rgba(255,255,255,.92); text-align: left; }
+  .howto img { width: calc(26 * var(--u)); height: calc(26 * var(--u)); object-fit: contain; }
+
+  /* ---------- десктоп ---------- */
+  .side { display: none; }
+  @media (min-width: 1024px) {
+    html, body { height: 100dvh; }
+    body {
+      display: grid; grid-template-columns: minmax(0, 340px) auto minmax(0, 340px);
+      justify-content: center; align-items: center; grid-template-rows: 100dvh; grid-auto-rows: 0;
+      column-gap: clamp(24px, 5vw, 72px); padding-inline: 24px;
+      background:
+        radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+        linear-gradient(#b8e5fc, #eaf7ff);
+    }
+    #wrap { height: min(calc(100dvh - 80px), 800px); width: auto; aspect-ratio: 360 / 800;
+      outline: 4px solid #fff; box-shadow: 0 18px 50px rgba(1,103,167,.3); grid-row: 1; }
+    .side { display: flex; flex-direction: column; width: 100%; max-width: 340px; grid-row: 1; }
+    .side.left { gap: 44px; }
+    .side.right { gap: 24px; }
+    .brand .eyebrow { font: 700 13px "Baloo 2"; color: var(--grass); text-transform: uppercase; letter-spacing: .1em; }
+    .brand .word { font: 800 56px/1 "Baloo 2"; color: var(--brand); letter-spacing: -.02em; }
+    .brand .word i { font-style: normal; color: var(--lime); }
+    .side ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 22px; }
+    .side li { display: flex; flex-direction: column; gap: 4px; font: 15px/21px Inter; color: var(--ink); max-width: 300px; }
+    .side li b { font: 800 22px/26px "Baloo 2"; color: var(--brand); }
+    .card { background: rgba(255,255,255,.75); border: 3px solid #fff; border-radius: 18px; padding: 18px 20px;
+      box-shadow: 0 8px 24px rgba(1,103,167,.12); }
+    .card h3 { font: 800 16px "Baloo 2"; margin: 0 0 10px; color: var(--brand); text-transform: uppercase; letter-spacing: .06em; }
+    .card p { margin: 0; font: 14px/20px Inter; color: var(--ink); }
+    .card .score { font: 800 40px/1 "Baloo 2"; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .card .score small { font-size: 16px; color: var(--muted); }
+    .card .items { display: flex; flex-direction: column; gap: 8px; }
+    .card .items div { display: flex; gap: 10px; align-items: center; font: 13px/17px Inter; }
+    .card .items img { width: 26px; height: 26px; object-fit: contain; }
+    .desk-note { font: 12px/17px Inter; color: var(--muted); }
+    .note .touch { display: none; }
+  }
+</style>
+</head>
+<body>
+<aside class="side left">
+  <div class="brand">
+    <div class="eyebrow">фан-демо · промо-игра бренда</div>
+    <div class="word">kapika<i>.</i></div>
+  </div>
+  <ol>
+    <li><b>1</b><span>Капи прыгает сам. Твоя работа — вести его влево и вправо.</span></li>
+    <li><b>2</b><span>Лаймовые платформы держат всегда. Синие ездят. Тёмные крошатся — не стой на них.</span></li>
+    <li><b>3</b><span>Пружина — сальто вверх. Кроссовок Kapika — реактивный буст. Молния — подброс. Хмурая туча — разряд и головокружение.</span></li>
+  </ol>
+</aside>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="hud" class="dim">
+    <div id="hScore">0</div>
+    <div id="hBest"></div>
+    <button id="bPause" type="button">пауза</button>
+  </div>
+
+  <!-- старт -->
+  <div class="screen on" id="sStart">
+    <img class="kapi-hero" src="assets/kapi-shout.png" alt="Капи">
+    <div class="logo">KAPI<small>JUMP</small></div>
+    <div class="sub">Заяц-испытатель Капи прыгает вверх по платформам. Сколько метров наберёшь?</div>
+    <div class="howto"><img src="assets/sneaker.png" alt=""><span>кроссовок — реактивный буст</span></div>
+    <div class="howto"><img src="assets/bolt.png" alt=""><span>молния — подброс вверх</span></div>
+    <div class="howto"><img src="assets/cloud.png" alt=""><span>туча бьёт током — облетай</span></div>
+    <button class="btn" id="bPlay">ИГРАТЬ</button>
+    <div class="note">← → или A/D — наклон. На телефоне держи левую или правую половину экрана.<span class="touch"> Или просто наклоняй телефон.</span></div>
+  </div>
+
+  <!-- конец -->
+  <div class="screen" id="sOver">
+    <img class="kapi-hero small" src="assets/kapi-peace.png" alt="Капи">
+    <div class="tag">полёт окончен</div>
+    <div class="big"><span id="overScore">0</span><small style="font-size:8cqw"> м</small></div>
+    <div class="rec" id="overBest"></div>
+    <div class="sub" id="overText"></div>
+    <button class="btn" id="bAgain">ЕЩЁ РАЗ</button>
+    <button class="btn ghost" id="bMenu">НА ГЛАВНУЮ</button>
+  </div>
+
+  <!-- пауза -->
+  <div class="screen" id="sPause">
+    <div class="logo" style="font-size:12cqw">ПАУЗА</div>
+    <button class="btn" id="bResume">ПРЫГАТЬ ДАЛЬШЕ</button>
+  </div>
+</div>
+<aside class="side right">
+  <div class="card">
+    <h3>Твой рекорд</h3>
+    <div class="score"><span id="sideBest">0</span> <small>м</small></div>
+  </div>
+  <div class="card">
+    <h3>Что в небе</h3>
+    <div class="items">
+      <div><img src="assets/sneaker.png" alt=""><span>кроссовок Kapika — реактивный подъём</span></div>
+      <div><img src="assets/bolt.png" alt=""><span>молния — мгновенный подброс</span></div>
+      <div><img src="assets/cloud.png" alt=""><span>туча — разряд и 0,7 с без управления</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Кто такой Капи</h3>
+    <p>Синий заяц-испытатель — маскот детского бренда Kapika. Всегда в кроссовках Kapika, уши разной длины — это фича.</p>
+  </div>
+</aside>
+<script>
+(() => {
+  // Telegram Mini App: развернуть, отключить свайп-закрытие, фуллскрин если умеет
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) {
+    try {
+      tg.ready(); tg.expand();
+      if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+      if (tg.requestFullscreen) tg.requestFullscreen();
+      const t = tg.safeAreaInset && tg.safeAreaInset.top;
+      if (t) document.getElementById('hud').style.paddingTop = t + 'px';
+    } catch (e) {}
+  }
+  function hap(s) { try { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(s); } catch (e) {} }
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  };
+
+  // ---------- картинки ----------
+  const IMG = {};
+  for (const k of ['kapi', 'kapi-side', 'kapi-back', 'kapi-jump', 'kapi-fall', 'kapi-dizzy', 'kapi-flip', 'kapi-dash', 'kapi-fly', 'bolt', 'sneaker', 'cloud']) {
+    const i = new Image(); i.src = 'assets/' + k + '.png'; IMG[k] = i;
+  }
+  // масштаб кадра к эталонному фронту — выверен по размеру головы, кадры из генерации крупнее
+  const SC = { 'kapi': 1, 'kapi-side': 1, 'kapi-back': 1, 'kapi-dash': .75,
+    'kapi-flip': .92, 'kapi-jump': .9, 'kapi-fall': .9, 'kapi-dizzy': 1, 'kapi-fly': .8 };
+
+  // ---------- звук (крошечный синт) ----------
+  let AC = null;
+  function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return AC; }
+  function tone(f0, f1, t, type, vol) {
+    const a = ac(); if (!a || a.state === 'suspended') return;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(f0, a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), a.currentTime + t);
+    g.gain.setValueAtTime(vol || .15, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, a.currentTime + t);
+    o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + t);
+  }
+  function noise(t, vol) {
+    const a = ac(); if (!a || a.state === 'suspended') return;
+    const b = a.createBuffer(1, a.sampleRate * t, a.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    const s = a.createBufferSource(), g = a.createGain(); s.buffer = b;
+    g.gain.value = vol || .2; s.connect(g); g.connect(a.destination); s.start();
+  }
+  const weeSnd = new Audio('assets/wee.wav'); weeSnd.preload = 'auto'; weeSnd.volume = .9;
+  const sfx = {
+    bounce: () => { tone(340, 190, .09, 'sine', .16); hap('light'); },
+    spring: () => { tone(300, 950, .22, 'sine', .2); hap('medium'); },
+    sneaker: () => { tone(400, 800, .14, 'square', .08); setTimeout(() => tone(600, 1200, .16, 'square', .08), 70);
+      weeSnd.currentTime = 0; weeSnd.play().catch(() => {}); hap('medium'); },
+    bolt: () => { tone(880, 1400, .07, 'sine', .14); hap('light'); },
+    zap: () => { noise(.14, .25); tone(180, 60, .2, 'sawtooth', .12); hap('heavy'); },
+    mile: () => { tone(660, 660, .09, 'sine', .14); setTimeout(() => tone(990, 990, .12, 'sine', .14), 90); },
+    die: () => tone(500, 120, .5, 'sawtooth', .12),
+  };
+  window.addEventListener('pointerdown', () => { const a = ac(); if (a && a.state === 'suspended') a.resume(); }, { once: true });
+
+  // ---------- холст ----------
+  const W = 360; let H = 640;
+  const cv = document.getElementById('c'), cx = cv.getContext('2d');
+  let K = 1;
+  function fit() {
+    const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 3);
+    H = Math.round(Math.min(800, Math.max(640, W * r.height / r.width)));
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    K = cv.width / W;
+    cx.setTransform(K, 0, 0, cv.height / H, 0, 0);
+  }
+  window.addEventListener('resize', fit); fit();
+
+  // ---------- физика ----------
+  const GRAV = 1750, JUMP = 860, SPRING = 1450, BOOST = -1520, MOVE = 1500, MAXVX = 330;
+  const PW = 62, PH = 130;
+  const FEET = PH * 0.42;
+  const PLAT_H = 14;
+
+  let S = null, mode = 'start', best = store.get('kj_best', 0);
+  let camY = 0, nextMile = 100, flash = 0, shake = 0;
+
+  function newGame() {
+    S = { t: 0, dieT: 0,
+      p: { x: W / 2, y: H - 160, vx: 0, vy: -JUMP, dir: 1, squash: 0, spin: 0, stun: 0, boost: 0 },
+      plats: [], items: [], parts: [], clouds: [], texts: [], streaks: [], stars: [] };
+    camY = 0; nextMile = 100; flash = 0; shake = 0;
+    let y = H - 40;
+    S.plats.push({ x: W / 2, y, w: 110, type: 'norm', vx: 0 });
+    while (y > -80) { y -= gap(); S.plats.push(mkPlat(y)); }
+    for (let i = 0; i < 7; i++) S.clouds.push({ x: Math.random() * W, y: Math.random() * H, s: .6 + Math.random() * .9, v: 8 + Math.random() * 14 });
+    window.__S = S;
+  }
+  function gap() {
+    const m = camY / 10;
+    const base = 62 + Math.min(46, m * 0.055);
+    return base + Math.random() * (26 + Math.min(30, m * 0.04));
+  }
+  function mkPlat(y) {
+    const m = camY / 10;
+    let type = 'norm';
+    const r = Math.random();
+    if (m > 60 && r < .16) type = 'break';
+    else if (m > 25 && r < .42) type = 'move';
+    const w = type === 'break' ? 58 : 64 + Math.random() * 10;
+    const p = { x: 20 + Math.random() * (W - 40 - w) + w / 2, y, w, type,
+      vx: type === 'move' ? (40 + Math.random() * 60) * (Math.random() < .5 ? -1 : 1) : 0,
+      spring: type === 'norm' && Math.random() < .07, dead: false, fy: 0 };
+    if (p.spring) p.sx = (Math.random() < .5 ? -1 : 1) * p.w * .28;
+    // предметы на платформе
+    const ir = Math.random();
+    if (m > 30 && ir < .05) S.items.push({ t: 'sneaker', x: p.x + (Math.random() < .5 ? -1 : 1) * p.w * .3, y: y - 24, got: 0 });
+    else if (ir < .16) S.items.push({ t: 'bolt', x: p.x + (Math.random() - .5) * p.w * .5, y: y - 26, got: 0 });
+    // туча рядом с платформой
+    if (m > 80 && Math.random() < .06) {
+      S.items.push({ t: 'cloud', x: Math.random() < .5 ? 30 : W - 30, y: y - 70 - Math.random() * 40,
+        vx: (18 + Math.random() * 26) * (Math.random() < .5 ? -1 : 1), got: 0 });
+    }
+    return p;
+  }
+
+  // ---------- ввод ----------
+  const keys = {};
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code) && mode === 'play') e.preventDefault();
+    if ((e.code === 'Escape' || e.code === 'KeyP') && (mode === 'play' || mode === 'pause')) togglePause();
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+  let touchDir = 0, tilt = 0, tiltOn = false;
+  const wrap = document.getElementById('wrap');
+  function ptrDir(e) {
+    const r = wrap.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    return x < r.width / 2 ? -1 : 1;
+  }
+  wrap.addEventListener('touchstart', e => { if (mode === 'play') { touchDir = ptrDir(e); e.preventDefault(); } }, { passive: false });
+  wrap.addEventListener('touchmove', e => { if (mode === 'play') { touchDir = ptrDir(e); e.preventDefault(); } }, { passive: false });
+  wrap.addEventListener('touchend', e => { if (!e.touches.length) touchDir = 0; });
+  window.addEventListener('deviceorientation', e => {
+    if (typeof e.gamma === 'number') { tiltOn = true; tilt = Math.max(-1, Math.min(1, e.gamma / 22)); }
+  });
+  function input() {
+    let d = 0;
+    if (keys.ArrowLeft || keys.KeyA) d -= 1;
+    if (keys.ArrowRight || keys.KeyD) d += 1;
+    if (touchDir) d = touchDir;
+    else if (tiltOn && Math.abs(tilt) > .12) d = tilt;
+    return d;
+  }
+
+  function puff(x, y, n, col, spd) {
+    for (let i = 0; i < n; i++) S.parts.push({ x, y, vx: (Math.random() - .5) * (spd || 140), vy: -30 - Math.random() * 80,
+      r: 2 + Math.random() * 3.5, t: .5 + Math.random() * .3, col });
+  }
+  function floatText(x, y, txt, col, big) {
+    S.texts.push({ x, y, txt, col, t: 1.6, big });
+  }
+
+  // ---------- цикл ----------
+  let last = 0;
+  function loop(ts) {
+    requestAnimationFrame(loop);
+    const dt = Math.min(.033, (ts - last) / 1000 || 0); last = ts;
+    if (mode === 'play') step(dt);
+    else if (mode === 'die') dieStep(dt);
+    draw();
+  }
+
+  function step(dt) {
+    const p = S.p; S.t += dt;
+    const d = p.stun > 0 ? 0 : input();
+    p.stun = Math.max(0, p.stun - dt);
+    p.spin = Math.max(0, p.spin - dt);
+    p.vx += d * MOVE * dt; p.vx *= Math.pow(.0015, dt);
+    p.vx = Math.max(-MAXVX, Math.min(MAXVX, p.vx));
+    if (d) p.dir = d > 0 ? 1 : -1;
+    p.x += p.vx * dt;
+    if (p.x < -PW / 2) p.x = W + PW / 2; else if (p.x > W + PW / 2) p.x = -PW / 2;
+
+    if (p.boost > 0) { // кроссовок-ускоритель
+      p.boost -= dt; p.vy = BOOST;
+      S.streaks.push({ x: Math.random() * W, y: p.y + 40 + Math.random() * 60, l: 30 + Math.random() * 40 });
+      if (Math.random() < .5) puff(p.x + (Math.random() - .5) * 30, p.y + FEET, 1, '#d4de29', 60);
+    } else {
+      p.vy += GRAV * dt;
+    }
+    p.y += p.vy * dt;
+    p.squash = Math.max(0, p.squash - dt * 6);
+
+    // полосы скорости при сильном подъёме
+    if (p.vy < -950 && Math.random() < .6) S.streaks.push({ x: Math.random() * W, y: p.y + 60, l: 25 + Math.random() * 45 });
+
+    // платформы
+    const feetPrev = p.y + FEET - p.vy * dt, feet = p.y + FEET;
+    for (const q of S.plats) {
+      if (q.type === 'move') { q.x += q.vx * dt; if (q.x < q.w / 2 + 6 || q.x > W - q.w / 2 - 6) q.vx *= -1; }
+      if (q.dead) { q.fy += 900 * dt; q.y += q.fy * dt; continue; }
+      if (p.vy > 0 && feetPrev <= q.y && feet >= q.y && Math.abs(p.x - q.x) < q.w / 2 + PW * .3) {
+        if (q.type === 'break') {
+          q.dead = true; puff(q.x, q.y, 8, '#4280a6');
+          p.y = q.y - FEET; p.vy = -JUMP; p.squash = 1; sfx.bounce();
+          continue;
+        }
+        p.y = q.y - FEET; p.vy = q.spring ? -SPRING : -JUMP; p.squash = 1;
+        if (q.spring) { p.spin = .62; puff(q.x + q.sx, q.y - 6, 14, '#d4de29'); sfx.spring(); }
+        else { puff(p.x, q.y, 5, '#91cc1d'); sfx.bounce(); }
+      }
+    }
+
+    // предметы
+    for (const it of S.items) {
+      if (it.got) continue;
+      if (it.t === 'cloud') {
+        it.x += it.vx * dt;
+        if (it.x < 24 || it.x > W - 24) it.vx *= -1;
+        const dx = p.x - it.x, dy = p.y - it.y;
+        if (dx * dx + dy * dy < 34 * 34) {
+          it.got = 1; p.stun = .7; p.vx *= .25; p.vy = Math.max(p.vy, 300);
+          flash = .14; shake = .35; puff(it.x, it.y, 16, '#fff', 220); puff(p.x, p.y, 8, '#d4de29', 180);
+          sfx.zap();
+        }
+        continue;
+      }
+      const dx = p.x - it.x, dy = (p.y - 20) - it.y;
+      if (dx * dx + dy * dy < 26 * 26) {
+        it.got = 1;
+        if (it.t === 'bolt') { p.vy = Math.min(p.vy, 0) - 420; puff(it.x, it.y, 10, '#d4de29', 160); sfx.bolt(); }
+        else if (it.t === 'sneaker') { p.boost = 1.05; p.spin = 0; floatText(p.x, p.y - 60, 'KAPIKA-БУСТ!', '#d4de29', 1); puff(it.x, it.y, 14, '#d4de29', 200); sfx.sneaker(); }
+      }
+    }
+    S.items = S.items.filter(i => !i.got || i.t === 'cloud' && i.got < 1);
+
+    // камера вверх
+    const top = H * .38;
+    if (p.y < top) {
+      const dy = top - p.y; p.y = top; camY += dy;
+      for (const q of S.plats) q.y += dy;
+      for (const it of S.items) it.y += dy;
+      for (const c of S.clouds) { c.y += dy * .35; if (c.y > H + 60) { c.y = -60; c.x = Math.random() * W; } }
+      for (const pt of S.parts) pt.y += dy;
+      for (const t2 of S.texts) t2.y += dy * .9;
+      for (const s of S.streaks) s.y += dy;
+    }
+    // рубежи
+    const mNow = Math.floor(camY / 10);
+    if (mNow >= nextMile) {
+      floatText(W / 2, p.y - 90, nextMile + ' М!', '#fff', 1);
+      for (let i = 0; i < 22; i++) S.parts.push({ x: W / 2, y: p.y - 60, vx: (Math.random() - .5) * 260,
+        vy: -60 - Math.random() * 160, r: 2 + Math.random() * 3, t: .8, col: ['#91cc1d', '#d4de29', '#129ae0', '#fff'][i % 4] });
+      sfx.mile();
+      nextMile += 100;
+    }
+    // чистка и догенерация
+    S.plats = S.plats.filter(q => q.y < H + 60 && !(q.dead && q.y > H + 90));
+    let topY = Math.min(...S.plats.map(q => q.y));
+    while (topY > -60) { const np = mkPlat(topY - gap()); S.plats.push(np); topY = np.y; }
+    S.items = S.items.filter(i => i.y < H + 70 && !i.got);
+    S.streaks = S.streaks.filter(s => (s.y += 1400 * dt) < H + 80);
+    for (const c of S.clouds) { c.x += c.v * dt; if (c.x > W + 70) c.x = -70; }
+    S.parts = S.parts.filter(pt => (pt.t -= dt) > 0);
+    for (const pt of S.parts) { pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vy += 500 * dt; }
+    S.texts = S.texts.filter(t2 => (t2.t -= dt) > 0);
+    flash = Math.max(0, flash - dt); shake = Math.max(0, shake - dt * 2);
+
+    if (p.y - FEET > H + 40) { mode = 'die'; S.dieT = 0; sfx.die(); }
+    hud();
+  }
+
+  function dieStep(dt) {
+    const p = S.p; S.dieT += dt;
+    p.vy += GRAV * dt; p.y += p.vy * dt; p.x += p.vx * dt;
+    for (const c of S.clouds) c.x += c.v * dt;
+    if (S.dieT > .6) gameOver();
+  }
+
+  // ---------- рисование ----------
+  function draw() {
+    const m = Math.min(1, camY / 7000);
+    const g = cx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, mix('#8ec8f2', '#2a4d8f', m));
+    g.addColorStop(1, mix('#eaf7ff', '#8fb8e8', m * .7));
+    cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    if (shake > 0) { cx.save(); cx.translate((Math.random() - .5) * 6 * shake, (Math.random() - .5) * 6 * shake); }
+    if (!S) { if (shake > 0) cx.restore(); return; }
+
+    // звёзды в вышине
+    if (m > .45) {
+      cx.fillStyle = 'rgba(255,255,255,' + ((m - .45) * 1.4) + ')';
+      for (let i = 0; i < 26; i++) {
+        const sx = (i * 137.5) % W, sy = ((i * 211.3) % (H * .6));
+        const tw = .5 + .5 * Math.sin(S.t * 2 + i);
+        cx.globalAlpha = .6 * tw * ((m - .45) * 1.4);
+        cx.fillRect(sx, sy, 2, 2);
+      }
+      cx.globalAlpha = 1;
+    }
+    for (const c of S.clouds) cloud(c.x, c.y, c.s);
+    for (const s of S.streaks) {
+      cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2;
+      cx.beginPath(); cx.moveTo(s.x, s.y); cx.lineTo(s.x, s.y + s.l); cx.stroke();
+    }
+    for (const q of S.plats) plat(q);
+    for (const it of S.items) item(it);
+    for (const pt of S.parts) { cx.globalAlpha = Math.min(1, pt.t * 2); cx.fillStyle = pt.col;
+      cx.beginPath(); cx.arc(pt.x, pt.y, pt.r, 0, 7); cx.fill(); }
+    cx.globalAlpha = 1;
+    kapi(S.p);
+    // всплывающие тексты
+    for (const t2 of S.texts) {
+      cx.globalAlpha = Math.min(1, t2.t);
+      cx.font = '800 ' + (t2.big ? 26 : 15) + 'px "Baloo 2"';
+      cx.textAlign = 'center';
+      cx.fillStyle = t2.col; cx.strokeStyle = 'rgba(0,94,184,.8)'; cx.lineWidth = 4;
+      cx.strokeText(t2.txt, t2.x, t2.y - (1.6 - t2.t) * 30);
+      cx.fillText(t2.txt, t2.x, t2.y - (1.6 - t2.t) * 30);
+    }
+    cx.globalAlpha = 1;
+    if (flash > 0) { cx.fillStyle = 'rgba(255,255,255,' + flash * 4 + ')'; cx.fillRect(0, 0, W, H); }
+    if (shake > 0) cx.restore();
+  }
+
+  function mix(a, b, t) {
+    const pa = [1, 3, 5].map(i => parseInt(a.substr(i, 2), 16)), pb = [1, 3, 5].map(i => parseInt(b.substr(i, 2), 16));
+    return 'rgb(' + pa.map((v, i) => Math.round(v + (pb[i] - v) * t)).join(',') + ')';
+  }
+  function cloud(x, y, s) {
+    cx.fillStyle = 'rgba(255,255,255,.85)';
+    cx.beginPath();
+    cx.arc(x, y, 16 * s, 0, 7); cx.arc(x + 16 * s, y + 4 * s, 12 * s, 0, 7); cx.arc(x - 16 * s, y + 4 * s, 12 * s, 0, 7);
+    cx.ellipse(x, y + 8 * s, 26 * s, 10 * s, 0, 0, 7); cx.fill();
+  }
+  function rr(x, y, w, h, r) { cx.beginPath(); cx.roundRect(x - w / 2, y - h / 2, w, h, r); }
+  function plat(q) {
+    const col = q.type === 'norm' ? '#91cc1d' : q.type === 'move' ? '#129ae0' : '#4280a6';
+    cx.save();
+    if (q.dead) cx.globalAlpha = Math.max(0, 1 - q.fy / 400);
+    rr(q.x, q.y + 2, q.w, PLAT_H, 7); cx.fillStyle = 'rgba(11,42,74,.18)'; cx.fill();
+    rr(q.x, q.y, q.w, PLAT_H, 7); cx.fillStyle = col; cx.fill();
+    cx.lineWidth = 2.5; cx.strokeStyle = '#000'; cx.stroke();
+    rr(q.x, q.y - 2.5, q.w - 10, 4, 2); cx.fillStyle = 'rgba(255,255,255,.45)'; cx.fill();
+    if (q.type === 'break') {
+      cx.strokeStyle = 'rgba(11,42,74,.5)'; cx.lineWidth = 1.5; cx.beginPath();
+      cx.moveTo(q.x - 6, q.y - 6); cx.lineTo(q.x - 2, q.y); cx.lineTo(q.x - 7, q.y + 6); cx.stroke();
+    }
+    if (q.type === 'move') {
+      cx.fillStyle = 'rgba(255,255,255,.9)';
+      const dir = Math.sign(q.vx) || 1;
+      cx.beginPath(); cx.moveTo(q.x + dir * 8, q.y); cx.lineTo(q.x - dir * 1, q.y - 4); cx.lineTo(q.x - dir * 1, q.y + 4); cx.fill();
+    }
+    if (q.spring) {
+      const sx = q.x + q.sx;
+      cx.strokeStyle = '#317b1a'; cx.lineWidth = 2.5; cx.beginPath();
+      cx.moveTo(sx - 7, q.y - 8);
+      for (let i = 1; i < 5; i++) { const yy = q.y - 8 - i * 4; cx.lineTo(sx + (i % 2 ? 7 : -7), yy); }
+      cx.stroke();
+      rr(sx, q.y - 30, 18, 6, 3); cx.fillStyle = '#d4de29'; cx.fill(); cx.lineWidth = 2; cx.strokeStyle = '#000'; cx.stroke();
+    }
+    cx.restore();
+  }
+  function item(it) {
+    const img = it.t === 'bolt' ? IMG.bolt : it.t === 'sneaker' ? IMG.sneaker : IMG.cloud;
+    if (!img.naturalWidth) return;
+    const bob = Math.sin(S.t * 3 + it.x) * 3;
+    if (it.t === 'cloud') {
+      const w = 62, h = w * img.naturalHeight / img.naturalWidth;
+      cx.drawImage(img, it.x - w / 2, it.y - h / 2 + bob * .4, w, h);
+      return;
+    }
+    const h = it.t === 'sneaker' ? 30 : 24, w = h * img.naturalWidth / img.naturalHeight;
+    cx.drawImage(img, it.x - w / 2, it.y - h / 2 + bob, w, h);
+  }
+
+  function kapi(p) {
+    // какой кадр показывать — по состоянию полёта, в приоритете: оглушение, сальто, буст
+    let key = 'kapi', mir = 0, spinR = 0;
+    if (p.stun > 0) key = 'kapi-dizzy';
+    else if (p.spin > 0) {
+      key = 'kapi-flip';
+      const t = 1 - p.spin / .62, e = t * t * (3 - 2 * t);
+      spinR = e * Math.PI * 2 * p.dir;
+    }
+    else if (p.boost > 0 || p.vy < -1150) key = 'kapi-fly';
+    else if (p.vy > 620 || mode === 'die') key = 'kapi-fall';
+    else if (Math.abs(p.vx) > 80) { key = 'kapi-dash'; mir = p.dir < 0; }
+    else if (p.vy < -60) key = 'kapi-jump';
+    window.__kk = key;
+    const img = IMG[key];
+    if (!img.naturalWidth) return;
+    const h = PH * (SC[key] || 1), w = h * img.naturalWidth / img.naturalHeight;
+    const sq = key === 'kapi' ? p.squash * .14 : p.squash * .05;
+    const st = p.vy < -500 && key !== 'kapi-flip' ? .03 : 0;
+    const lean = (key === 'kapi' || key === 'kapi-jump') ? Math.max(-.18, Math.min(.18, p.vx / 1900)) : 0;
+    const tumble = mode === 'die' ? S.dieT * 6 : 0;
+    cx.save();
+    if (key === 'kapi-flip') { // сальто — крутим вокруг центра тела
+      cx.translate(p.x, p.y + FEET - h / 2);
+      const rr = Math.max(w, h) * .55;
+      cx.strokeStyle = 'rgba(255,255,255,.5)'; cx.lineWidth = 3; cx.lineCap = 'round';
+      for (const lag of [.35, .7]) {
+        cx.beginPath(); cx.arc(0, 0, rr * (1 + lag * .15), spinR - lag - 1.1, spinR - lag + .1);
+        cx.stroke();
+      }
+      cx.rotate(spinR);
+      cx.drawImage(img, -w * .44, -h * .44, w * .88, h * .88);
+    } else {
+      cx.translate(p.x, p.y + FEET);
+      cx.rotate(lean + tumble);
+      cx.scale((1 + sq - st) * (mir ? -1 : 1), 1 - sq + st);
+      cx.drawImage(img, -w / 2, -h, w, h);
+    }
+    cx.restore();
+  }
+
+  // ---------- HUD и экраны ----------
+  const $ = id => document.getElementById(id);
+  function metres() { return Math.floor(camY / 10); }
+  function hud() {
+    $('hScore').textContent = metres();
+    $('hBest').textContent = best ? 'рекорд ' + best + ' м' : '';
+    $('sideBest').textContent = best;
+  }
+  function show(id) {
+    for (const s of document.querySelectorAll('.screen')) s.classList.toggle('on', s.id === id);
+    $('hud').classList.toggle('dim', !!id);
+    $('bPause').style.display = id ? 'none' : 'block';
+  }
+  function start() { newGame(); mode = 'play'; show(null); last = performance.now(); }
+  function gameOver() {
+    mode = 'over';
+    const sc = metres(), isRec = sc > best;
+    if (isRec) { best = sc; store.set('kj_best', best); }
+    $('overScore').textContent = sc;
+    $('overBest').textContent = isRec && sc > 0 ? 'новый рекорд!' : 'рекорд: ' + best + ' м';
+    $('overText').textContent = sc < 30 ? 'Капи только разгоняется. Ещё прыжок?' :
+      sc < 120 ? 'Неплохой полёт! Капи доволен.' : 'Высотно! Капи-испытатель гордится.';
+    $('sideBest').textContent = best;
+    show('sOver');
+  }
+  function togglePause() {
+    if (mode === 'play') { mode = 'pause'; show('sPause'); }
+    else if (mode === 'pause') { mode = 'play'; show(null); last = performance.now(); }
+  }
+  $('bPlay').onclick = start;
+  $('bAgain').onclick = start;
+  $('bMenu').onclick = () => { mode = 'start'; show('sStart'); };
+  $('bResume').onclick = togglePause;
+  $('bPause').onclick = togglePause;
+  $('sideBest').textContent = best;
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
