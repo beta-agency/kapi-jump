@@ -189,7 +189,7 @@
     try {
       tg.ready(); tg.expand();
       if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
-      if (tg.requestFullscreen) tg.requestFullscreen();
+      if (tg.requestFullscreen && /ios|android/i.test(tg.platform || '')) tg.requestFullscreen();
       const t = tg.safeAreaInset && tg.safeAreaInset.top;
       if (t) document.getElementById('hud').style.paddingTop = t + 'px';
     } catch (e) {}
